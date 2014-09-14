@@ -4,7 +4,7 @@ This document explains how to use the Java/Jersey based OneDrive API to talk wit
 and is part of the tutorial series (http://www.tjeerd.net/2014/08/23/onedrive-api-restful-programming-in-java/ and
 http://www.tjeerd.net/2014/09/14/onedrive-api-restful-programming-in-java-part-2-making-calls-with-java).
 
-## 1. Registering up your client/app
+## 1. Registering your client/app
 Before you can talk to the OneDrive RESTful services you need to register your client/app via the OneDrive Development
 Dashboard. After you have registered your client/app you need to get an authorization code which you need to get so
 called refresh and access tokens. Fore more information go to http://www.tjeerd.net/2014/08/23/onedrive-api-restful-programming-in-java/

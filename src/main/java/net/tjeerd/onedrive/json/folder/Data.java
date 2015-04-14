@@ -14,7 +14,7 @@ public class Data  {
     private String     name;
     private String     parent_id;
     private SharedWith shared_with;
-    private int        size;
+    private long        size;
     private String     source;
     private String     type;
     private String     updated_time;
@@ -123,11 +123,11 @@ public class Data  {
         this.shared_with = sharedWith;
     }
     
-    public int getSize() {
+    public long getSize() {
         return this.size;
     }
     
-    public void setSize(int size) {
+    public void setSize(long size) {
         this.size = size;
     }
     

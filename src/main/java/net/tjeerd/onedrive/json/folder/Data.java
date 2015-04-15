@@ -48,6 +48,9 @@ public class Data  {
     private String	exposure_numerator; 
     private String	exposure_denominator; 
     
+    //Fileds for video files (some the same as image)
+    private int	bitrate;
+    
     public Data(String id) {
         this.id = id;
     }
@@ -357,6 +360,14 @@ public class Data  {
 
 	public void setImages(List<MusicFileImages> images) {
 		this.images = images;
+	}
+
+	public int getBitrate() {
+		return bitrate;
+	}
+
+	public void setBitrate(int bitrate) {
+		this.bitrate = bitrate;
 	}
 
 

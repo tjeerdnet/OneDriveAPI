@@ -2,8 +2,8 @@ package net.tjeerd.onedrive.json.folder;
 
 public class MusicFileImages {
 	
-	private int		height;
-	private int		width;
+	private int	height;
+	private int	width;
 	private String	source;
 	private String	type;
 	

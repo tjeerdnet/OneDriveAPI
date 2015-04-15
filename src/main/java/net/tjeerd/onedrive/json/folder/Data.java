@@ -5,7 +5,6 @@ import java.util.List;
 
 
 public class Data  {
-	
     private String     client_updated_time;
     private Number     comments_count;
     private boolean    comments_enabled;
@@ -24,7 +23,6 @@ public class Data  {
     private String     type;
     private String     updated_time;
     private String     upload_location;
-    
     
     // Fileds for music files
     private String	title;

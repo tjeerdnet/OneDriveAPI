@@ -40,7 +40,7 @@ public class Data  {
     private String	when_taken;
     private int		height; 
     private int		width; 
-    private String	location; 
+    private PhotoLocation	location;
     private String	camera_make; 
     private String	camera_model; 
     private String	focal_ratio; 
@@ -295,11 +295,11 @@ public class Data  {
 		this.width = width;
 	}
 
-	public String getLocation() {
+	public PhotoLocation getLocation() {
 		return location;
 	}
 
-	public void setLocation(String location) {
+	public void setLocation(PhotoLocation location) {
 		this.location = location;
 	}
 

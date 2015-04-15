@@ -27,28 +27,28 @@ public class Data  {
     
     
     // Fileds for music files
-    private String		title;
-    private String		artist;
-    private String		album;
-    private String		album_artist;
-    private String		genre;
-    private int			duration;
-    private String		picture;
-    private int			tags_count; 
-    private boolean		tags_enabled;
-    private List<MusicFileImages>      images = new ArrayList<MusicFileImages>();
+    private String	title;
+    private String	artist;
+    private String	album;
+    private String	album_artist;
+    private String	genre;
+    private int		duration;
+    private String	picture;
+    private int		tags_count; 
+    private boolean	tags_enabled;
+    private List<MusicFileImages>	images = new ArrayList<MusicFileImages>();
     
     //Fields for image files
-    private String		when_taken;
-    private int			height; 
-    private int			width; 
-    private String		location; 
-    private String		camera_make; 
-    private String		camera_model; 
-    private String		focal_ratio; 
-    private String		focal_length; 
-    private String		exposure_numerator; 
-    private String		exposure_denominator; 
+    private String	when_taken;
+    private int		height; 
+    private int		width; 
+    private String	location; 
+    private String	camera_make; 
+    private String	camera_model; 
+    private String	focal_ratio; 
+    private String	focal_length; 
+    private String	exposure_numerator; 
+    private String	exposure_denominator; 
     
     public Data(String id) {
         this.id = id;

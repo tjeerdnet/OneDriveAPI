@@ -93,10 +93,11 @@ public class OneDriveTest {
     @Test
     public void uploadLargeFileTest() throws Exception {
         java.io.File oneDriveTestfile = new java.io.File(getClass().getClassLoader().getResource(ONEDRIVE_TESTFILE).getFile());
+        net.tjeerd.onedrive.json.folder.File oneDriveFile;
 //        net.tjeerd.onedrive.json.folder.File oneDriveFile = oneDriveAPI.uploadFile(oneDriveTestfile, "");
 //        assertNotNull(oneDriveFile);
 
-        oneDriveAPI.uploadLargeFile(oneDriveTestfile, "");
-    	
+        oneDriveFile = oneDriveAPI.uploadLargeFile(oneDriveTestfile, "");
+        assertNotNull(oneDriveFile);
     }
 }

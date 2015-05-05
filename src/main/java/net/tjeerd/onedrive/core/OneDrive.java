@@ -1,5 +1,6 @@
 package net.tjeerd.onedrive.core;
 
+import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -29,6 +30,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class OneDrive implements OneDriveAPI {
     private static final Logger logger = LoggerFactory.getLogger(OneDrive.class);
@@ -321,11 +324,16 @@ public class OneDrive implements OneDriveAPI {
      */
 	public net.tjeerd.onedrive.json.folder.File uploadLargeFile(File file,
 			String folderId) throws Exception {
+		
         net.tjeerd.onedrive.json.folder.File oneDriveFile = new net.tjeerd.onedrive.json.folder.File();
-        net.tjeerd.onedrive.json.largefile.UploadSession uploadSession = new UploadSession();
+        UploadSession uploadSession = new UploadSession();
         MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
         ObjectMapper objectMapper = new ObjectMapper();
+        FileInputStream fileInputStream = new FileInputStream(file);
         String apiPath = "";
+        String postBody = "";
+        byte[] fileChunkBuffer = new byte[1024];
+        byte[] fileChunk;
 
         if (folderId.isEmpty()) {
             apiPath = String.format(API_PATH_LARGE_FILE_ROOT, file.getName());
@@ -337,9 +345,33 @@ public class OneDrive implements OneDriveAPI {
         WebResource webResource = client.resource(OneDriveEnum.API_URL_v1.toString() + apiPath);
 
         try {
+        	// Begin large file upload session
+        	postBody = objectMapper.writeValueAsString(new HashMap<String, String>(){{put("@name.conflictBehavior","rename");}});
             ClientResponse clientResponse = webResource.queryParams(queryParams).type(MediaType.APPLICATION_JSON)
-            		.post(ClientResponse.class, "{\"@name.conflictBehavior\":\"rename\"}");
+            		.post(ClientResponse.class, postBody);
             uploadSession = objectMapper.readValue(clientResponse.getEntity(String.class).toString(), UploadSession.class);
+            
+            // Upload file fragments
+            int readBytes = 0;
+            long uploadBytesCount = 0;
+            webResource = client.resource(uploadSession.getUploadUrl());
+            while (0 < (readBytes = fileInputStream.read(fileChunkBuffer, 0, 1024))) {
+            	fileChunk = Arrays.copyOf(fileChunkBuffer, readBytes);
+            	
+            	clientResponse =  webResource.queryParams(queryParams).type(MediaType.APPLICATION_JSON)
+            	.header("Content-Length", readBytes)
+            	.header("Content-Range", String.format("bytes %d-%d/%d", uploadBytesCount, uploadBytesCount + readBytes - 1, file.length()))
+            	.put(ClientResponse.class,	fileChunk);
+            	
+            	uploadBytesCount += readBytes;
+            	
+            	// Http 202 (Accepted) means success.
+            	if(clientResponse.getStatus() != ClientResponse.Status.ACCEPTED.getStatusCode()) {
+            		throw new net.tjeerd.onedrive.exception.RestException();
+            	}
+            	
+            	System.out.println("OneDrive.uploadLargeFile()" + clientResponse.getEntity(String.class));
+            }
             
             System.out.println(uploadSession.getUploadUrl().toString());
         } catch (Exception e) {

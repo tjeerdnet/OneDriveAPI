@@ -12,3 +12,5 @@ src/test/resources/onedrive.properties
 *.properties
 
 src/test/resources/onedrive.properties
+
+src/test/resources/test.tar.gz

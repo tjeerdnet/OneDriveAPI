@@ -35,8 +35,8 @@ public class OneDriveTest {
         }
         principal = new Principal(properties.getProperty("clientid"), properties.getProperty("clientsecret"),
                                   properties.getProperty("authorizationcode"), properties.getProperty("refreshtoken"));
-
-        oneDriveAPI = new OneDrive(principal,true);
+        // Debug
+        oneDriveAPI = new OneDrive(principal,true);	
         oneDriveAPI.initAccessTokenByRefreshTokenAndClientId();
     }
 
@@ -92,11 +92,13 @@ public class OneDriveTest {
     
     @Test
     public void uploadLargeFileTest() throws Exception {
-    	// ONEDRIVE_TESTFILE
-        java.io.File oneDriveTestfile = new java.io.File(getClass().getClassLoader().getResource("test.tar.gz").getFile());
-        net.tjeerd.onedrive.json.folder.File oneDriveFile;
+        java.io.File oneDriveTestfile = new java.io.File(getClass().getClassLoader().getResource("dummy5MB.img").getFile());
+        net.tjeerd.onedrive.json.largefile.CreatedLargeFile oneDriveFile;
 
         oneDriveFile = oneDriveAPI.uploadLargeFile(oneDriveTestfile, "");
+        
+        System.out.println(oneDriveFile.getName());
+        System.out.println(oneDriveFile.getSize());
         assertNotNull(oneDriveFile);
     }
 }

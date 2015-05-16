@@ -164,7 +164,7 @@ public interface OneDriveAPI {
      * @return OneDriveAPI file object
      * @throws Exception
      */
-    net.tjeerd.onedrive.json.folder.File uploadLargeFile(java.io.File file, String folderId) throws Exception;
+    net.tjeerd.onedrive.json.largefile.CreatedLargeFile uploadLargeFile(java.io.File file, String folderId) throws Exception;
 
     /**
      * Get a shared link to a specific file identifier.

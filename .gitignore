@@ -5,12 +5,8 @@
 .settings
 target
 bin
+
+pom_mvn_deploy.xml
 src/test/resources/onedrive.properties
-
-src/test/resources/onedrive.properties
-
-*.properties
-
-src/test/resources/onedrive.properties
-
-src/test/resources/test.tar.gz
+src/test/resources/dummy20MB.img
+src/test/resources/dummy5MB.img

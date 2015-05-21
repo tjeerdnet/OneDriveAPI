@@ -1,0 +1,6 @@
+language: java
+jdk:
+  - oraclejdk8
+before_install: mvn clean
+install: mvn install -DskipTests=true
+script: echo "test skip"

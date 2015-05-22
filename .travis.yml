@@ -4,3 +4,9 @@ jdk:
 before_install: mvn clean
 install: mvn install -DskipTests=true
 script: echo "test skip"
+deploy:
+  provider: releases
+  api_key: authentication_token
+  file: target/OneDriveAPI*.jar
+  on:
+    repo: gingkojp/aipo

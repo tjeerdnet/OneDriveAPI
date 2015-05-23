@@ -6,7 +6,7 @@ install: mvn install -DskipTests=true
 script: echo "install OneDriveAPI"
 deploy:
   provider: releases
-  api_key: authentication_token
+  api_key: {{authentication_token}}
   file: target/OneDriveAPI*.jar
   skip_cleanup: true
   on:

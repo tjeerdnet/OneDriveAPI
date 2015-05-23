@@ -3,7 +3,7 @@ jdk:
   - oraclejdk8
 before_install: mvn clean
 install: mvn install -DskipTests=true
-script: echo "install OneDriveAPI"
+script: echo "install OneDriveAPI."
 deploy:
   provider: releases
   api_key:

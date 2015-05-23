@@ -6,9 +6,10 @@ install: mvn install -DskipTests=true
 script: echo "install OneDriveAPI"
 deploy:
   provider: releases
-  api_key: {{authentication_token}}
+  api_key:
+    secure: Axggg7uF0Huz7lEhHPCYojIkwaYej59c5YaqvE64UtXaRNMLnh1CJARJz+SqIZzhnMEYKZiralcQr+9It0FvYKH8Ep97VlTv2aoZdUUzw4+Zjvtpx0QhvqeTBgT4ZhKhMbh+Bf8Yqhsq1/g5ex+bL9xyIw7pyU0HkJuI9fROaD1RGsOmct3wG30j7uT7OL1nxaCsGomj8J6O9FSdW3tylaWBSKvJetfvn2bDehr0dwFLNsV+cYHaxq09DDgcoWhexQNSl+nceKeEF6hmdx8QrwEvsPj64iGdHN4NKVjAtKyFSIBFNWkRDEscMYo0QS9LdkGwacXVpKpqFx6hQtqB602JLdACelZva3mphdhSkH5XQF4plpT2mkTrA7FVWpytNTZ9yrsFE72TrE7ZBfdLS5N4QaxzuHnBnb8zFrfhRinBGrD+QiK06+WdJj+p3Z5LheQ02P9KYDbqn1uM+hD/NS/TiRG6IwnyTZsceRy/TzLogt5oNoBbQFrCxbCSWtLXk75V+iGodKHl1ULOjU1OGZBNHwqAt8ZO+zmCrij1UicbD0oqOfWOlFSz90HaNhETSo68XQGGFVyGtVa9/283Y69wjcrCVxj06mg+0o9rR6gNG3ZHzt4F53vf53D8NxH5P29JGJdF2SZbYF5TMhhrUoGKfF/A0576DoLegArp/nI=
   file: target/OneDriveAPI*.jar
   skip_cleanup: true
   on:
     all_branches: true
-    tag: true
+    tags: true

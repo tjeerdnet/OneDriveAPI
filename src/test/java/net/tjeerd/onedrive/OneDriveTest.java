@@ -33,11 +33,10 @@ public class OneDriveTest {
         if (inputStream == null) {
             throw new FileNotFoundException("OneDriveAPI properties file '" + ONEDRIVE_PROPERTIESFILE+ "' not found in the classpath");
         }
-
         principal = new Principal(properties.getProperty("clientid"), properties.getProperty("clientsecret"),
                                   properties.getProperty("authorizationcode"), properties.getProperty("refreshtoken"));
-
-        oneDriveAPI = new OneDrive(principal,true);
+        // Debug
+        oneDriveAPI = new OneDrive(principal,true);	
         oneDriveAPI.initAccessTokenByRefreshTokenAndClientId();
     }
 
@@ -78,7 +77,7 @@ public class OneDriveTest {
 
         oneDriveAPI.deleteFile(oneDriveFile);
     }
-
+    
     @Test
     public void createFolderTest() throws Exception {
         net.tjeerd.onedrive.json.folder.Folder oneDriveFolder = oneDriveAPI.createFolder("Testfolder","Step1InitToken description","");
@@ -89,5 +88,17 @@ public class OneDriveTest {
         assertNotNull(oneDriveFolderUpdated);
 
         oneDriveAPI.deleteFolder(oneDriveFolderUpdated.getId());
+    }
+    
+    @Test
+    public void uploadLargeFileTest() throws Exception {
+        java.io.File oneDriveTestfile = new java.io.File(getClass().getClassLoader().getResource("dummy5MB.img").getFile());
+        net.tjeerd.onedrive.json.largefile.CreatedLargeFile oneDriveFile;
+
+        oneDriveFile = oneDriveAPI.uploadLargeFile(oneDriveTestfile, "");
+        
+        System.out.println(oneDriveFile.getName());
+        System.out.println(oneDriveFile.getSize());
+        assertNotNull(oneDriveFile);
     }
 }

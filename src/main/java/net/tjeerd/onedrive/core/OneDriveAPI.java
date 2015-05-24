@@ -154,6 +154,17 @@ public interface OneDriveAPI {
      * @throws Exception
      */
     net.tjeerd.onedrive.json.folder.File uploadFile(java.io.File file, String folderId) throws Exception;
+    
+    /**
+     * Send a large file to OneDriveAPI by uploading the content. If no folder identifier is given the file will be put in the personal folder.<br>
+     * If the folder identifier is given the file will be put in the specified folder identifier location.
+     * 
+     * @param file file to upload to OneDriveAPI
+     * @param folderId folder identifier to put the file into
+     * @return OneDriveAPI file object
+     * @throws Exception
+     */
+    net.tjeerd.onedrive.json.largefile.CreatedLargeFile uploadLargeFile(java.io.File file, String folderId) throws Exception;
 
     /**
      * Get a shared link to a specific file identifier.

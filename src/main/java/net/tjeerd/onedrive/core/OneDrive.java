@@ -8,6 +8,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import net.tjeerd.onedrive.enums.FriendlyNamesEnum;
 import net.tjeerd.onedrive.enums.OneDriveEnum;
 import net.tjeerd.onedrive.exception.RestException;
@@ -15,6 +16,10 @@ import net.tjeerd.onedrive.json.Quota;
 import net.tjeerd.onedrive.json.SharedLink;
 import net.tjeerd.onedrive.json.User;
 import net.tjeerd.onedrive.json.folder.Folder;
+import net.tjeerd.onedrive.json.largefile.Accepted;
+import net.tjeerd.onedrive.json.largefile.CreatedLargeFile;
+import net.tjeerd.onedrive.json.largefile.UploadSession;
+
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.slf4j.Logger;
@@ -22,9 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class OneDrive implements OneDriveAPI {
     private static final Logger logger = LoggerFactory.getLogger(OneDrive.class);
@@ -32,19 +40,34 @@ public class OneDrive implements OneDriveAPI {
     private Principal principal;
     private Client client;
 
-    private static final String API_PATH_ME                = "me";
+    private static final String API_PATH_ME = "me";
     private static final String API_PATH_ME_SKYDRIVE_QUOTA = "me/skydrive/quota";
-    private static final String API_PATH_ME_SKYDRIVE       = "me/skydrive";
+    private static final String API_PATH_ME_SKYDRIVE = "me/skydrive";
     private static final String API_PATH_ME_SKYDRIVE_FILES = "me/skydrive/files";
-    private static final String API_PATH_FILES             = "files";
-    private static final String API_PATH_CONTENT           = "content?download=true";
-    private static final String API_PATH_SHARED_EDIT_LINK  = "shared_edit_link";
-    private static final String API_PATH_SHARED_READ_LINK  = "shared_read_link";
+    private static final String API_PATH_FILES = "files";
+    private static final String API_PATH_CONTENT = "content?download=true";
+    private static final String API_PATH_SHARED_EDIT_LINK = "shared_edit_link";
+    private static final String API_PATH_SHARED_READ_LINK = "shared_read_link";
+
+    private static final String API_PATH_LARGE_FILE_ROOT = "drive/root:/%s:/upload.createSession";
+    private static final String API_PATH_LARGE_FILE_FOLDER = "drive/items/%s:/%s/upload.createSession";
+    /**
+     * 10MB = 10 * 1024 * 1024
+     */
+    private static final int LARGE_FILE_FRAGMENT_MAX_SIZE = 10 * 1024 * 1024;
+    private static final HashMap<String, String> LARGE_FILE_POST_REQUEST_BODY = new HashMap<String, String>() {
+        private static final long serialVersionUID = -5800640500118562565L;
+        {
+            put("@name.conflictBehavior", "rename");
+        }
+    };
 
     /**
      * Construct the OneDriveAPI API with the principal as argument.
      *
-     * @param principal principal containing tokens, client identification, client secret etc.
+     * @param principal
+     *            principal containing tokens, client identification, client
+     *            secret etc.
      */
     public OneDrive(Principal principal) {
         DefaultClientConfig defaultClientConfig = new DefaultClientConfig();
@@ -56,15 +79,20 @@ public class OneDrive implements OneDriveAPI {
     }
 
     /**
-     * Construct the OneDriveAPI API with the principal as argument and optionally enable debugging.
+     * Construct the OneDriveAPI API with the principal as argument and
+     * optionally enable debugging.
      *
-     * @param principal principal containing token, client identification, client secret etc.
-     * @param debug true to enable debugging, otherwise false
+     * @param principal
+     *            principal containing token, client identification, client
+     *            secret etc.
+     * @param debug
+     *            true to enable debugging, otherwise false
      */
     public OneDrive(Principal principal, boolean debug) {
         DefaultClientConfig defaultClientConfig = new DefaultClientConfig();
         defaultClientConfig.getClasses().add(JacksonJsonProvider.class);
-        //defaultClientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        // defaultClientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
+        // Boolean.TRUE);
         this.client = Client.create(defaultClientConfig);
 
         if (debug) {
@@ -75,11 +103,9 @@ public class OneDrive implements OneDriveAPI {
         oneDriveCore = new OneDriveCore(client, principal);
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public boolean initTokenByPrincipal() {
         if (hasPrincipalClientSecretAndClientIdAndAuthorizationCode()) {
             logger.info("Client-id, client secret and authorization code found, trying to initialize tokens");
@@ -94,7 +120,6 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public boolean initAccessTokenByRefreshTokenAndClientId() {
         if (hasPrincipalRefreshTokenAndClientId()) {
             this.principal.getoAuth20Token().setAccess_token(oneDriveCore.getAccessTokenByRefreshTokenAndClientId().getAccess_token());
@@ -104,48 +129,45 @@ public class OneDrive implements OneDriveAPI {
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public Principal getPrincipal() {
         return this.principal;
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public Client getClient() {
         return this.client;
     }
 
     /**
-     * Return whether the principal has a client identification and secret and authorization code set.
+     * Return whether the principal has a client identification and secret and
+     * authorization code set.
      *
-     * @return true if principal has a client identification, secret and authorization code set, otherwise false
+     * @return true if principal has a client identification, secret and
+     *         authorization code set, otherwise false
      */
     private boolean hasPrincipalClientSecretAndClientIdAndAuthorizationCode() {
-        return (StringUtils.isNotEmpty(principal.getClientId()) && StringUtils.isNotEmpty(principal.getClientSecret()) &&
-                StringUtils.isNotEmpty(principal.getAuthorizationCode()));
+        return (StringUtils.isNotEmpty(principal.getClientId()) && StringUtils.isNotEmpty(principal.getClientSecret()) && StringUtils.isNotEmpty(principal.getAuthorizationCode()));
     }
 
     /**
-     * Return whether the principal has a refresh token and client identification set.
+     * Return whether the principal has a refresh token and client
+     * identification set.
      *
-     * @return true if principal has a refresh token and client identification set, otherwise false
+     * @return true if principal has a refresh token and client identification
+     *         set, otherwise false
      */
     private boolean hasPrincipalRefreshTokenAndClientId() {
         return (StringUtils.isNotEmpty(principal.getoAuth20Token().getRefresh_token()) && StringUtils.isNotEmpty(principal.getClientId()));
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public User getUser() throws Exception {
         return (User) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, API_PATH_ME, new User());
     }
@@ -153,16 +175,13 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public Quota getQuota() throws Exception {
         return (Quota) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, API_PATH_ME_SKYDRIVE_QUOTA, new Quota());
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public Folder getMyFilesList(FriendlyNamesEnum friendlyNamesEnum) throws Exception {
         String apiPath = API_PATH_ME_SKYDRIVE;
 
@@ -175,26 +194,25 @@ public class OneDrive implements OneDriveAPI {
         return (Folder) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, apiPath, new Folder());
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public Folder getFileList(String folderId) throws Exception {
         return (Folder) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, folderId + "/" + API_PATH_FILES, new Folder());
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public void downloadFile(net.tjeerd.onedrive.json.folder.File oneDriveFile, String destinationFilePath) {
         ClientResponse clientResponse = oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_OCTET_STREAM, oneDriveFile.getId() + "/" + API_PATH_CONTENT);
         java.io.File destinationFile = new java.io.File(destinationFilePath);
 
         if (clientResponse.getStatus() == ClientResponse.Status.FOUND.getStatusCode()) {
-            /* The response is a redirect location, so do a new call to get the real download location */
+            /*
+             * The response is a redirect location, so do a new call to get the
+             * real download location
+             */
             try {
                 clientResponse = oneDriveCore.doGetAPI(clientResponse.getLocation().toString(), MediaType.APPLICATION_OCTET_STREAM);
                 java.io.File resultFile = clientResponse.getEntity(java.io.File.class);
@@ -205,7 +223,10 @@ public class OneDrive implements OneDriveAPI {
                 exception.printStackTrace();
             }
         } else if (clientResponse.getStatus() == ClientResponse.Status.OK.getStatusCode()) {
-            /* The response contains the location, so save the response to a file */
+            /*
+             * The response contains the location, so save the response to a
+             * file
+             */
             try {
                 java.io.File resultFile = clientResponse.getEntity(java.io.File.class);
                 org.apache.commons.io.FileUtils.moveFile(resultFile, destinationFile);
@@ -217,11 +238,9 @@ public class OneDrive implements OneDriveAPI {
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public net.tjeerd.onedrive.json.folder.File getFile(String fileId) throws Exception {
         return (net.tjeerd.onedrive.json.folder.File) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, fileId, new net.tjeerd.onedrive.json.folder.File());
     }
@@ -229,16 +248,13 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public net.tjeerd.onedrive.json.folder.Folder getFolder(String folderId) throws Exception {
         return (net.tjeerd.onedrive.json.folder.Folder) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, folderId, new net.tjeerd.onedrive.json.folder.Folder());
     }
 
-
     /**
      * {@inheritDoc}
      */
-    @Override
     public void deleteFile(net.tjeerd.onedrive.json.folder.File oneDriveFile) throws RestException {
         oneDriveCore.doDeleteAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, oneDriveFile.getId());
     }
@@ -246,7 +262,6 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public net.tjeerd.onedrive.json.folder.File updateFile(net.tjeerd.onedrive.json.folder.File oneDriveFile) throws RestException, IOException {
         return (net.tjeerd.onedrive.json.folder.File) oneDriveCore.doPutAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, oneDriveFile.getId(), oneDriveFile);
     }
@@ -254,7 +269,6 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public net.tjeerd.onedrive.json.folder.Folder updateFolder(net.tjeerd.onedrive.json.folder.Folder oneDriveFolder) throws RestException, IOException {
         return (Folder) oneDriveCore.doPutAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, oneDriveFolder.getId(), oneDriveFolder);
     }
@@ -262,7 +276,6 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public net.tjeerd.onedrive.json.folder.Folder createFolder(String name, String description, String locationFolderId) throws RestException, IOException {
         String apiPath;
         net.tjeerd.onedrive.json.folder.Folder oneDriveFolder = new Folder();
@@ -281,18 +294,12 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void deleteFolder(String folderId) throws RestException {
-        oneDriveCore.doDeleteAPI(new MultivaluedMapImpl(),MediaType.APPLICATION_JSON, folderId);
+        oneDriveCore.doDeleteAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, folderId);
     }
 
     /**
-     * Send a file to OneDriveAPI by uploading the content. If no folder identifier is given the file will be put in the personal folder.<br>
-     * If the folder identifier is given the file will be put in the specified folder identifier location.
-     *
-     * @param file file to upload to OneDriveAPI
-     * @param folderId folder identifier to put the file into
-     * @return OneDriveAPI file object
+     * {@inheritDoc}
      */
     public net.tjeerd.onedrive.json.folder.File uploadFile(File file, String folderId) {
         net.tjeerd.onedrive.json.folder.File oneDriveFile = new net.tjeerd.onedrive.json.folder.File();
@@ -321,9 +328,92 @@ public class OneDrive implements OneDriveAPI {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public net.tjeerd.onedrive.json.largefile.CreatedLargeFile uploadLargeFile(File file, String folderId) throws Exception {
+        
+        net.tjeerd.onedrive.json.largefile.CreatedLargeFile createdFile = null;
+        MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+        UploadSession uploadSession = new UploadSession();
+        ObjectMapper objectMapper = new ObjectMapper();
+        FileInputStream fileInputStream = new FileInputStream(file);
+        WebResource webResource = null;
+        ClientResponse clientResponse = null;
+        String apiPath = null;
+        byte[] fileChunkBuffer = new byte[LARGE_FILE_FRAGMENT_MAX_SIZE];
+        byte[] fileChunk;
+        int readBytes = 0;
+        long uploadBytesCount = 0;
+
+        if (folderId.isEmpty()) {
+            apiPath = String.format(API_PATH_LARGE_FILE_ROOT, file.getName());
+        } else {
+            apiPath = String.format(API_PATH_LARGE_FILE_FOLDER, folderId, file.getName());
+        }
+
+        try {
+            // Begin large file upload session
+            queryParams.add(OneDriveCore.API_PARAM_ACCESS_TOKEN, principal.getoAuth20Token().getAccess_token());
+            webResource = client.resource(OneDriveEnum.API_URL_ONEDRIVE.toString() + apiPath);
+
+            clientResponse = webResource.queryParams(queryParams).type(MediaType.APPLICATION_JSON).post(ClientResponse.class, objectMapper.writeValueAsString(LARGE_FILE_POST_REQUEST_BODY));
+
+            if (clientResponse.getStatusInfo().getFamily() != javax.ws.rs.core.Response.Status.Family.SUCCESSFUL) {
+                throw new net.tjeerd.onedrive.exception.RestException();
+            }
+            uploadSession = objectMapper.readValue(clientResponse.getEntity(String.class).toString(), UploadSession.class);
+
+            // Upload file fragments that size is LARGE_FILE_FRAGMENT_MAX_SIZE
+            // bytes but last fragment will be less than the constant.
+            webResource = client.resource(uploadSession.getUploadUrl());
+            while (0 < (readBytes = fileInputStream.read(fileChunkBuffer, 0, LARGE_FILE_FRAGMENT_MAX_SIZE)) && clientResponse.getStatus() != 201) {
+
+                // When the last fragment, limit byte arrays size to read bytes.
+                if(readBytes != LARGE_FILE_FRAGMENT_MAX_SIZE) {
+                    fileChunk = Arrays.copyOf(fileChunkBuffer, readBytes);
+                } else {
+                    fileChunk = fileChunkBuffer;
+                }
+
+                clientResponse = webResource.queryParams(queryParams).type(MediaType.APPLICATION_JSON).header("Content-Length", readBytes)
+                        .header("Content-Range", String.format("bytes %d-%d/%d", uploadBytesCount, uploadBytesCount + readBytes - 1, file.length())).put(ClientResponse.class, fileChunk);
+
+                // HTTP 201, 202, 203 etc means successful
+                if (clientResponse.getStatusInfo().getFamily() != javax.ws.rs.core.Response.Status.Family.SUCCESSFUL) {
+                    throw new net.tjeerd.onedrive.exception.RestException();
+                } else if(clientResponse.getStatus() == 202){
+                    Accepted accepted = objectMapper.readValue(clientResponse.getEntity(String.class), Accepted.class);
+                }
+
+                // total uploaded byte size is needed for accessing API.
+                uploadBytesCount += readBytes;
+            }
+
+            // Parse responsed json string to get created file information.
+            createdFile = objectMapper.readValue(clientResponse.getEntity(String.class), CreatedLargeFile.class);
+        } catch (Exception e) {
+            logger.error("Cannot upload file '" + file.getAbsolutePath() + "' to OneDriveAPI");
+            e.printStackTrace();
+            
+            // Cancel the upload session by requesting "DELETE" method.
+            clientResponse = webResource.queryParams(queryParams).type(MediaType.APPLICATION_JSON).delete(ClientResponse.class);
+        } finally {
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
+            if (clientResponse != null) {
+                clientResponse.close();
+            }
+        }
+
+        return createdFile;
+    }
+
+    /**
      * Convert file content to a byte array.
      *
-     * @param file file object to convert to a byte array
+     * @param file
+     *            file object to convert to a byte array
      * @return byte array holding the file content
      */
     private byte[] fileToByteArray(java.io.File file) {
@@ -335,7 +425,7 @@ public class OneDrive implements OneDriveAPI {
             fileInputStream.read(byteArrayFile);
             fileInputStream.close();
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -345,7 +435,6 @@ public class OneDrive implements OneDriveAPI {
     /**
      * {@inheritDoc}
      */
-    @Override
     public SharedLink getSharedLink(String fileId, boolean isEditable) throws Exception {
         String apiPath;
 
@@ -357,5 +446,4 @@ public class OneDrive implements OneDriveAPI {
 
         return (SharedLink) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, apiPath, new SharedLink());
     }
-
 }

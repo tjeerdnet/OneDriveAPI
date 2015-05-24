@@ -1,2 +1,12 @@
 *.iml
 *.class
+.classpath
+.project
+.settings
+target
+bin
+
+pom_mvn_deploy.xml
+src/test/resources/onedrive.gingkojp.properties
+src/test/resources/dummy20MB.img
+src/test/resources/dummy5MB.img

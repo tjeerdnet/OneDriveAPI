@@ -170,7 +170,7 @@ public class OneDrive implements OneDriveAPI {
         if (friendlyNamesEnum.equals(FriendlyNamesEnum.ALL)) {
             apiPath += "/" + API_PATH_FILES;
         } else {
-            apiPath += friendlyNamesEnum.toString() + "/" + API_PATH_FILES;
+            apiPath += "/" + friendlyNamesEnum.toString() + "/" + API_PATH_FILES;
         }
 
         return (Folder) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, apiPath, new Folder());

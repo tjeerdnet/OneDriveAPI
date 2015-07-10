@@ -25,6 +25,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class OneDrive implements OneDriveAPI {
     private static final Logger logger = LoggerFactory.getLogger(OneDrive.class);
@@ -169,7 +170,7 @@ public class OneDrive implements OneDriveAPI {
         if (friendlyNamesEnum.equals(FriendlyNamesEnum.ALL)) {
             apiPath += "/" + API_PATH_FILES;
         } else {
-            apiPath += friendlyNamesEnum.toString() + "/" + API_PATH_FILES;
+            apiPath += "/" + friendlyNamesEnum.toString() + "/" + API_PATH_FILES;
         }
 
         return (Folder) oneDriveCore.doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_JSON, apiPath, new Folder());
@@ -217,6 +218,40 @@ public class OneDrive implements OneDriveAPI {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream openFile(String fileId) {
+        ClientResponse clientResponse = oneDriveCore.
+                doGetAPI(new MultivaluedMapImpl(), MediaType.APPLICATION_OCTET_STREAM, fileId + "/" + API_PATH_CONTENT);
+
+        if (clientResponse.getStatus() == ClientResponse.Status.FOUND.getStatusCode()) {
+            /* The response is a redirect location, so do a new call to get the real download location */
+            try {
+                clientResponse = oneDriveCore.doGetAPI(
+                        clientResponse.getLocation().toString(), MediaType.APPLICATION_OCTET_STREAM
+                );
+                return clientResponse.getEntity(InputStream.class);
+            } catch (Exception e) {
+                logger.error("Could not open file from redirect location " + clientResponse.getLocation());
+                e.printStackTrace();
+            }
+        } else if (clientResponse.getStatus() == ClientResponse.Status.OK.getStatusCode()) {
+            /* The response contains the location, so save the response to a file */
+            try {
+                return clientResponse.getEntity(InputStream.class);
+            } catch (Exception e) {
+                logger.error("Cannot open file with identifier '" + fileId + "'");
+                e.printStackTrace();
+            }
+        } else if (clientResponse.getStatus() == ClientResponse.Status.UNAUTHORIZED.getStatusCode()){
+            /* Update access token and try open file again */
+            initAccessTokenByRefreshTokenAndClientId();
+            return openFile(fileId);
+        }
+        throw new RuntimeException("Cannot download file with identifier '" + fileId + "'");
+    }
 
     /**
      * {@inheritDoc}

@@ -9,6 +9,7 @@ import net.tjeerd.onedrive.json.User;
 import net.tjeerd.onedrive.json.folder.Folder;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 public interface OneDriveAPI {
     /**
@@ -79,6 +80,13 @@ public interface OneDriveAPI {
      * @param destinationFilePath destination file path to store the downloaded file
      */
     void downloadFile(net.tjeerd.onedrive.json.folder.File oneDriveFile, String destinationFilePath);
+
+    /**
+     * Open a OneDriveAPI file as an InputStream
+     *
+     * @param fileId file identifier
+     */
+    InputStream openFile(String fileId);
 
     /**
      * Get a OneDriveAPI file object holding all file details.

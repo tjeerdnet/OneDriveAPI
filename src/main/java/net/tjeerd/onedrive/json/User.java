@@ -1,14 +1,14 @@
 package net.tjeerd.onedrive.json;
 
 public class User {
-    String id;
-    String name;
-    String first_name;
-    String last_name;
-    String link;
-    String gender;
-    String locale;
-    String updated_time;
+    private String id;
+    private String name;
+    private String first_name;
+    private String last_name;
+    private String link;
+    private String gender;
+    private String locale;
+    private String updated_time;
     
     public String getId() {
         return id;

@@ -1,8 +1,8 @@
 package net.tjeerd.onedrive.json;
 
 public class Quota {
-    long quota;
-    long available;
+    private long quota;
+    private long available;
     
     public long getQuota() {
         return quota;

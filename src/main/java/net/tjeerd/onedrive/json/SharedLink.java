@@ -1,7 +1,7 @@
 package net.tjeerd.onedrive.json;
 
 public class SharedLink {
-    String link;
+    private String link;
     
     public String getLink() {
         return link;

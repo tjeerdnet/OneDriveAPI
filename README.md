@@ -15,7 +15,7 @@ to replace the values of the constants (CLIENT_ID, CLIENT_SECRET and AUTHORIZATI
 have prepared in step 1. When you run the program it will print out the refresh token.
 
 ## 3. Using the OneDrive API
-Look for the OneDriveTest unit test to see how you can talk with the OneDrive RESTful API. Be sure that the values in
+Look for the OneDriveTest and OneDriveUtilTest test to see how you can talk with the OneDrive RESTful API. Be sure that the values in
 the test resources folder (onedrive.properties) are replaced with the client-id, client secret, authorization code
 and refresh token you have prepared in step 1 and 2.
 

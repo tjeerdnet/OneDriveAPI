@@ -1,11 +1,9 @@
 package net.tjeerd.onedrive.core;
 
-import java.util.Properties;
-
 /**
  *
  *  This class takes off client the need of creating
- * unusual object to them like Properties of Principal.
+ * unusual object to them like Principal.
  *
  *  This implementation provides a singleton to client
  * and it needs only to specify its 'login' parameters,
@@ -29,25 +27,18 @@ public class OneDriveUtil {
      * @param clientId
      * @param clientSecret
      * @param authorizationCode
-     * @param refreshToken
      */
     private OneDriveUtil(String clientId, String clientSecret,
-                           String authorizationCode, String refreshToken) {
+                           String authorizationCode) {
 
-        Properties properties = new Properties();
-
-        oneDriveAPI = new OneDrive(new Principal(properties.getProperty(clientId),
-                properties.getProperty(clientSecret),
-                properties.getProperty(authorizationCode),
-                properties.getProperty(refreshToken)));
-
+        oneDriveAPI = new OneDrive(new Principal(clientId, clientSecret, authorizationCode));
         oneDriveAPI.initAccessTokenByRefreshTokenAndClientId();
     }
 
     public static OneDriveUtil getInstance(String clientId, String clientSecret,
-                                           String authorizationCode, String refreshToken) {
+                                           String authorizationCode) {
         if(INSTANCE == null)
-            INSTANCE = new OneDriveUtil(clientId, clientSecret, authorizationCode, refreshToken);
+            INSTANCE = new OneDriveUtil(clientId, clientSecret, authorizationCode);
         return INSTANCE;
     }
 
